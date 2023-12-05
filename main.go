@@ -16,13 +16,15 @@ func main() {
 		os.Exit(1)
 	}
 	if !strings.Contains(*csv, ".csv") {
-		panic("csv file is required")
+		fmt.Println("csv file is required")
+		os.Exit(1)
 	}
 	ips, err := filter(*csv)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error filtering %s: %v", *csv, err)
+		os.Exit(1)
 	}
 	for _, ip := range ips {
-		ping(ip)
+		ping(ip, *csv)
 	}
 }

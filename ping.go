@@ -4,19 +4,19 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	probing "github.com/prometheus-community/pro-bing"
 )
 
-func ping(name string) {
+func ping(name string, csv string) {
 	pinger, err := probing.NewPinger(name)
 	pinger.Timeout = time.Second * 1
 	if err != nil {
 		return
 	}
 
-	// Listen for Ctrl-C.
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -38,7 +38,7 @@ func ping(name string) {
 	pinger.OnFinish = func(stats *probing.Statistics) {
 		// if it is reachable save the ip address to a file
 		if stats.PacketsRecv > 0 {
-			pingToFile(pinger.IPAddr().String())
+			pingToFile(pinger.IPAddr().String(), csv)
 		}
 		// fmt.Printf("\n--- %s ping statistics ---\n", stats.Addr)
 		// fmt.Printf("%d packets transmitted, %d packets received, %v%% packet loss\n",
@@ -55,15 +55,14 @@ func ping(name string) {
 }
 
 // this save the ip address to a file if the file exit append to the file in new line
-func pingToFile(ip string) {
-	// open file using READ & WRITE permission
-	var file, err = os.OpenFile("ip.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+func pingToFile(ip string, orginalFileName string) {
+	orginalFileName = strings.TrimSuffix(orginalFileName, ".csv")
+	var file, err = os.OpenFile(orginalFileName+"_ip.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return
 	}
 	defer file.Close()
 
-	// write some text line-by-line to file
 	_, err = file.WriteString(ip + "\n")
 	if err != nil {
 		return
